@@ -525,7 +525,8 @@ void TCP_Reassembler::AckReceived(uint64 seq)
 			(endp->state == TCP_ENDPOINT_ESTABLISHED &&
 				endp->peer->state == TCP_ENDPOINT_ESTABLISHED ) );
 
-	uint64 num_missing = TrimToSeq(seq);
+    //call TrimToSeq2() that has the out of order ACK seq number buffering
+	uint64 num_missing = TrimToSeq2(seq);
 
 	if ( test_active )
 		{

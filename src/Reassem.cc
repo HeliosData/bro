@@ -123,7 +123,108 @@ void Reassembler::NewBlock(double t, uint64 seq, uint64 len, const u_char* data)
 	BlockInserted(start_block);
 	}
 
-uint64 Reassembler::TrimToSeq(uint64 seq)
+
+
+uint64 Reassembler::TrimToSeq(uint64 seq)                                       
+    {                                                                           
+    uint64 num_missing = 0;                                                     
+                                                                                
+    // Do this accounting before looking for Undelivered data,                  
+    // since that will alter last_reassem_seq.                                  
+                                                                                
+    if ( blocks )                                                               
+        {                                                                       
+        if ( blocks->seq > last_reassem_seq )                                   
+            // An initial hole.                                                 
+            num_missing += blocks->seq - last_reassem_seq;                      
+        }                                                                       
+                                                                                
+    else if ( seq > last_reassem_seq )                                          
+        { // Trimming data we never delivered.                                  
+        if ( ! blocks )                                                         
+            // We won't have any accounting based on blocks                     
+            // for this hole.                                                   
+            num_missing += seq - last_reassem_seq;                              
+        }                                                                       
+                                                                                
+    if ( seq > last_reassem_seq )                                               
+        {                                                                       
+        // We're trimming data we never delivered.                              
+        Undelivered(seq);                                                       
+        }     
+    while ( blocks && blocks->upper <= seq )                                    
+        {                                                                       
+        DataBlock* b = blocks->next;                                            
+                                                                                
+        if ( b && b->seq <= seq )                                               
+            {                                                                   
+            if ( blocks->upper != b->seq )                                      
+                num_missing += b->seq - blocks->upper;                          
+            }                                                                   
+        else                                                                    
+            {                                                                   
+            // No more blocks - did this one make it to seq?                    
+            // Second half of test is for acks of FINs, which                   
+            // don't get entered into the sequence space.                       
+            if ( blocks->upper != seq && blocks->upper != seq - 1 )             
+                num_missing += seq - blocks->upper;                             
+            }                                                                   
+                                                                                
+        if ( max_old_blocks )                                                   
+            {                                                                   
+            // Move block over to old_blocks queue.                             
+            blocks->next = 0;                                                   
+                                                                                
+            if ( last_old_block )                                               
+                {                                                               
+                blocks->prev = last_old_block;                                  
+                last_old_block->next = blocks;                                  
+                }                                                               
+            else                                                                
+                {                                                               
+                blocks->prev = 0; 
+                old_blocks = blocks;                                            
+                }                                                               
+                                                                                
+            last_old_block = blocks;                                            
+            total_old_blocks++;                                                 
+                                                                                
+            while ( old_blocks && total_old_blocks > max_old_blocks )           
+                {                                                               
+                DataBlock* next = old_blocks->next;                             
+                delete old_blocks;                                              
+                old_blocks = next;                                              
+                total_old_blocks--;                                             
+                }                                                               
+            }                                                                   
+                                                                                
+        else                                                                    
+            delete blocks;                                                      
+                                                                                
+        blocks = b;                                                             
+        }                                                                       
+                                                                                
+    if ( blocks )                                                               
+        {                                                                       
+        blocks->prev = 0;                                                       
+                                                                                
+        // If we skipped over some undeliverable data, then                     
+        // it's possible that this block is now deliverable.                    
+        // Give it a try.                                                       
+        if ( blocks->seq == last_reassem_seq )                                  
+            BlockInserted(blocks);                                              
+        }                                        
+    else                                                                        
+        last_block = 0;                                                         
+                                                                                
+    if ( seq > trim_seq )                                                       
+        // seq is further ahead in the sequence space.                          
+        trim_seq = seq;                                                         
+                                                                                
+    return num_missing;                                                         
+    }  
+
+uint64 Reassembler::TrimToSeq2(uint64 seq)
 	{
 	uint64 num_missing = 0;
 
@@ -132,23 +233,33 @@ uint64 Reassembler::TrimToSeq(uint64 seq)
 
 	if ( blocks )
 		{
-		if ( blocks->seq > last_reassem_seq )
-			// An initial hole.
-			num_missing += blocks->seq - last_reassem_seq;
+			if ( blocks->seq > last_reassem_seq ) {
+				// An initial hole.
+				num_missing += blocks->seq - last_reassem_seq;
+			}
 		}
 
 	else if ( seq > last_reassem_seq )
 		{ // Trimming data we never delivered.
-		if ( ! blocks )
-			// We won't have any accounting based on blocks
-			// for this hole.
-			num_missing += seq - last_reassem_seq;
+			if ( seq - last_reassem_seq > 65000 ) {
+				if ( ! blocks ) {
+					// We won't have any accounting based on blocks
+					// for this hole.
+					num_missing += seq - last_reassem_seq;
+				}
+			} else {
+				return 0;
+			}
 		}
 
 	if ( seq > last_reassem_seq )
 		{
-		// We're trimming data we never delivered.
-		Undelivered(seq);
+			if ( seq - last_reassem_seq > 65000 ) {
+				// We're trimming data we never delivered.
+				Undelivered(seq);
+			} else {
+				return 0;
+			}
 		}
 
 	while ( blocks && blocks->upper <= seq )
@@ -216,10 +327,10 @@ uint64 Reassembler::TrimToSeq(uint64 seq)
 	else
 		last_block = 0;
 
-	if ( seq > trim_seq )
+	if ( seq > trim_seq ) {
 		// seq is further ahead in the sequence space.
 		trim_seq = seq;
-
+	}
 	return num_missing;
 	}
 

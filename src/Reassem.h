@@ -46,6 +46,9 @@ public:
 	// if not all in-sequence, 0 if they were.
 	uint64 TrimToSeq(uint64 seq);
 
+    //This function will absorb out of order sequence ack packets up to 65k
+	uint64 TrimToSeq2(uint64 seq);
+
 	// Delete all held blocks.
 	void ClearBlocks();
 	void ClearOldBlocks();
