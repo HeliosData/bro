@@ -3,19 +3,19 @@
 	url = git://git.bro.org/bro-aux
 [submodule "aux/binpac"]
 	path = aux/binpac
-	url = git://git.bro.org/binpac
+	url = https://github.com/HeliosData/binpac.git
 [submodule "aux/broccoli"]
 	path = aux/broccoli
 	url = git://git.bro.org/broccoli
 [submodule "aux/broctl"]
 	path = aux/broctl
-	url = git://git.bro.org/broctl
+	url = https://github.com/HeliosData/broctl.git
 [submodule "aux/btest"]
 	path = aux/btest
 	url = git://git.bro.org/btest
 [submodule "cmake"]
 	path = cmake
-	url = git://git.bro.org/cmake
+	url = https://github.com/HeliosData/cmake.git
 [submodule "src/3rdparty"]
 	path = src/3rdparty
 	url = git://git.bro.org/bro-3rdparty
