@@ -620,7 +620,6 @@ protected:
 	BroType* yield_type;
 };
 
-extern OpaqueType* fuzzy_type;
 extern OpaqueType* md5_type;
 extern OpaqueType* sha1_type;
 extern OpaqueType* sha256_type;

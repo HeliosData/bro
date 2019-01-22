@@ -121,7 +121,6 @@ vector<string> params;
 set<string> requested_plugins;
 char* proc_status_file = 0;
 
-OpaqueType* fuzzy_type = 0;
 OpaqueType* md5_type = 0;
 OpaqueType* sha1_type = 0;
 OpaqueType* sha256_type = 0;
@@ -832,7 +831,6 @@ int main(int argc, char** argv)
 
 	init_event_handlers();
 
-        fuzzy_type = new OpaqueType("fuzzy");
 	md5_type = new OpaqueType("md5");
 	sha1_type = new OpaqueType("sha1");
 	sha256_type = new OpaqueType("sha256");

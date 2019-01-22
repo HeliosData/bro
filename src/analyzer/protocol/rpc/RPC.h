@@ -62,11 +62,6 @@ public:
 	uint32 Program() const		{ return prog; }
 	uint32 Version() const		{ return vers; }
 	uint32 Proc() const		{ return proc; }
-	uint32 Uid() const { return uid; }
-	uint32 Gid() const { return gid; }
-	uint32 Stamp() const { return stamp; }
-	const std::string& MachineName() const { return machinename; }
-	const std::vector<int>& AuxGIDs() const { return auxgids; }
 
 	double StartTime() const	{ return start_time; }
 	void SetStartTime(double t)	{ start_time = t; }
@@ -83,12 +78,8 @@ public:
 
 protected:
 	uint32 xid, rpc_version, prog, vers, proc;
-	uint32 cred_flavor, stamp;
-	uint32 uid, gid;
-	std::vector<int> auxgids;
-	uint32 verf_flavor;
+	uint32 cred_flavor, verf_flavor;
 	u_char* call_buf;	// copy of original call buffer
-	std::string machinename;
 	double start_time;
 	double last_time;
 	int rpc_len;		// size of the full RPC call, incl. xid and msg_type
@@ -103,7 +94,7 @@ declare(PDict,RPC_CallInfo);
 
 class RPC_Interpreter {
 public:
-	explicit RPC_Interpreter(analyzer::Analyzer* analyzer);
+	RPC_Interpreter(analyzer::Analyzer* analyzer);
 	virtual ~RPC_Interpreter();
 
 	// Delivers the given RPC.  Returns true if "len" bytes were
@@ -190,7 +181,7 @@ protected:
 class Contents_RPC : public tcp::TCP_SupportAnalyzer {
 public:
 	Contents_RPC(Connection* conn, bool orig, RPC_Interpreter* interp);
-	~Contents_RPC() override;
+	virtual ~Contents_RPC();
 
 protected:
 	typedef enum {
@@ -209,10 +200,10 @@ protected:
 		RESYNC_INIT,
 	} resync_state_t;
 
-	void Init() override;
+	virtual void Init();
 	virtual bool CheckResync(int& len, const u_char*& data, bool orig);
-	void DeliverStream(int len, const u_char* data, bool orig) override;
-	void Undelivered(uint64 seq, int len, bool orig) override;
+	virtual void DeliverStream(int len, const u_char* data, bool orig);
+	virtual void Undelivered(uint64 seq, int len, bool orig);
 
 	virtual void NeedResync() {
 		resync_state = NEED_RESYNC;
@@ -237,13 +228,13 @@ class RPC_Analyzer : public tcp::TCP_ApplicationAnalyzer {
 public:
 	RPC_Analyzer(const char* name, Connection* conn,
 			RPC_Interpreter* arg_interp);
-	~RPC_Analyzer() override;
+	virtual ~RPC_Analyzer();
 
-	void Done() override;
+	virtual void Done();
 
 protected:
-	void DeliverPacket(int len, const u_char* data, bool orig,
-					uint64 seq, const IP_Hdr* ip, int caplen) override;
+	virtual void DeliverPacket(int len, const u_char* data, bool orig,
+					uint64 seq, const IP_Hdr* ip, int caplen);
 
 	void ExpireTimer(double t);
 

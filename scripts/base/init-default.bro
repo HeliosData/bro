@@ -53,8 +53,6 @@
 @load base/protocols/irc
 @load base/protocols/krb
 @load base/protocols/modbus
-@load base/protocols/postgres
-@load base/protocols/mongodb
 @load base/protocols/mysql
 @load base/protocols/ntlm
 @load base/protocols/pop3

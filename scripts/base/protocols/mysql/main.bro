@@ -18,8 +18,6 @@ export {
 		cmd:	string	&log;
 		## The argument issued to the command
 		arg:	string	&log;
-		## where the command happen in db
-		db:	string	&log;
 		## Did the server tell us that the command succeeded?
 		success: bool &log &optional;
 		## The number of affected rows, if any
@@ -45,7 +43,7 @@ event bro_init() &priority=5
 	Analyzer::register_for_ports(Analyzer::ANALYZER_MYSQL, ports);
 	}
 
-event mysql_handshake(c: connection, username: string, database: string)
+event mysql_handshake(c: connection, username: string)
 	{
 	if ( ! c?$mysql )
 		{
@@ -55,7 +53,6 @@ event mysql_handshake(c: connection, username: string, database: string)
 		info$id = c$id;
 		info$cmd = "login";
 		info$arg = username;
-		info$db = database;
 		c$mysql = info;
 		}
 	}

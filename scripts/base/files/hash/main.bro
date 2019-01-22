@@ -12,10 +12,6 @@ export {
 
 		## A SHA256 digest of the file contents.
 		sha256: string &log &optional;
-
-		## A Fuzzy digest of the file contents.
-		fuzzy: string &log &optional;
-		
 	};
 
 }
@@ -32,9 +28,5 @@ event file_hash(f: fa_file, kind: string, hash: string) &priority=5
 	case "sha256":
 		f$info$sha256 = hash;
 		break;
-	case "fuzzy":
-		f$info$fuzzy = hash;
-		break;
-	
 	}
 	}
